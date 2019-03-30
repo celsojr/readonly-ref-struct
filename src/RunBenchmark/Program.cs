@@ -14,15 +14,18 @@ namespace RunBenchmark
     [CoreJob, MemoryDiagnoser]
     public class MethodCallCompare
     {
-        private const int ImageSize = 250;
+        private const int IMAGE_WIDTH = 250;
+        private const int IMAGE_HEIGHT = 250;
+        private const int BYTES_PER_PIXEL = 4; // RGBA
 
-        private readonly DrawingServiceClass classService = new DrawingServiceClass(ImageSize);
+        private readonly int buffer = ((IMAGE_WIDTH * IMAGE_HEIGHT) * BYTES_PER_PIXEL) + (IMAGE_WIDTH * BYTES_PER_PIXEL) + BYTES_PER_PIXEL;
 
-        private readonly byte[] whiteColor = new byte[] { 0xFF, 0xFF, 0xFF };
-        private readonly byte[] redColor = new byte[] { 0xF3, 0x65, 0x23 };
-        private readonly byte[] greenColor = new byte[] { 0x8D, 0xC7, 0x3F };
-        private readonly byte[] blueColor = new byte[] { 0x00, 0xAD, 0xEF };
-        private readonly byte[] yellowColor = new byte[] { 0xFF, 0xC2, 0x0F };
+        private readonly DrawingServiceClass classService;
+
+        public MethodCallCompare()
+        {
+            classService = new DrawingServiceClass(new byte[buffer], IMAGE_WIDTH, IMAGE_HEIGHT, BYTES_PER_PIXEL);
+        }
 
         [Benchmark(Baseline = true)]
         public void DrawUsingClasses()
@@ -74,34 +77,49 @@ namespace RunBenchmark
             classService.Draw(blue);
             classService.Draw(yellow);
 
-            //Save();
+            //Save(classService.ImageBuffer);
 
         }
 
         [Benchmark]
         public void DrawUsingStructs()
         {
-            Span<byte> imageBuffer = stackalloc byte[ImageSize * 4 * 1024];
-            var serv = new DrawingServiceStruct(imageBuffer, ImageSize);
+            Span<byte> imageBuffer = stackalloc byte[buffer];
+            var serv = new DrawingServiceStruct(imageBuffer, IMAGE_WIDTH, IMAGE_HEIGHT, BYTES_PER_PIXEL);
 
             Span<byte> colorBuffer = stackalloc byte[3];
 
-            colorBuffer = whiteColor;
+            colorBuffer[0] = 0xFF;
+            colorBuffer[1] = 0xFF;
+            colorBuffer[2] = 0xFF;
+
             serv.Draw(new DrawingDtoStruct(colorBuffer));
 
-            colorBuffer = redColor;
-            serv.Draw( new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
+            colorBuffer[0] = 0xF3;
+            colorBuffer[1] = 0x65;
+            colorBuffer[2] = 0x23;
 
-            colorBuffer = greenColor;
             serv.Draw(new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
 
-            colorBuffer = blueColor;
+            colorBuffer[0] = 0x8D;
+            colorBuffer[1] = 0xC7;
+            colorBuffer[2] = 0x3F;
+            
             serv.Draw(new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
 
-            colorBuffer = yellowColor;
+            colorBuffer[0] = 0x00;
+            colorBuffer[1] = 0xAD;
+            colorBuffer[2] = 0xEF;
+            
             serv.Draw(new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
 
-            //Save();
+            colorBuffer[0] = 0xFF;
+            colorBuffer[1] = 0xC2;
+            colorBuffer[2] = 0x0F;
+            
+            serv.Draw(new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
+
+            //Save(serv.GetImageBuffer());
         }
     }
 }

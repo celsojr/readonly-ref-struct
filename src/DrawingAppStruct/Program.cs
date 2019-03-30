@@ -23,46 +23,61 @@ namespace DrawingAppStruct
 
     public class DrawingStruct
     {
-        private const int ImageSize = 250;
-        private readonly string desktop = GetFolderPath(SpecialFolder.Desktop);
+        private const int IMAGE_WIDTH = 251;
+        private const int IMAGE_HEIGHT = 251;
+        private const int BYTES_PER_PIXEL = 4; // RGBA
 
-        private readonly byte[] whiteColor = new byte[] { 0xFF, 0xFF, 0xFF };
-        private readonly byte[] redColor = new byte[] { 0xF3, 0x65, 0x23 };
-        private readonly byte[] greenColor = new byte[] { 0x8D, 0xC7, 0x3F };
-        private readonly byte[] blueColor = new byte[] { 0x00, 0xAD, 0xEF };
-        private readonly byte[] yellowColor = new byte[] { 0xFF, 0xC2, 0x0F };
+        private readonly int bufferSize = ((IMAGE_WIDTH * IMAGE_HEIGHT) * BYTES_PER_PIXEL) + (IMAGE_WIDTH * BYTES_PER_PIXEL) + BYTES_PER_PIXEL;
+
+        private readonly string desktop = GetFolderPath(SpecialFolder.Desktop);
 
         public void DrawUsingStructs()
         {
-            Span<byte> imageBuffer = stackalloc byte[ImageSize * 4 * 1024];
-            var serv = new DrawingServiceStruct(imageBuffer, ImageSize);
+            Span<byte> imageBuffer = stackalloc byte[bufferSize];
+            var serv = new DrawingServiceStruct(imageBuffer, IMAGE_WIDTH, IMAGE_HEIGHT, BYTES_PER_PIXEL);
 
             Span<byte> colorBuffer = stackalloc byte[3];
 
-            colorBuffer = whiteColor;
+            //white
+            colorBuffer[0] = 0xFF;
+            colorBuffer[1] = 0xFF;
+            colorBuffer[2] = 0xFF;
             serv.Draw(new DrawingDtoStruct(colorBuffer));
 
-            colorBuffer = redColor;
+            //red
+            colorBuffer[0] = 0xF3;
+            colorBuffer[1] = 0x65;
+            colorBuffer[2] = 0x23;
             serv.Draw(new DrawingDtoStruct(10, 120, 10, 120, colorBuffer));
 
-            colorBuffer = greenColor;
+            //green
+            colorBuffer[0] = 0x8D;
+            colorBuffer[1] = 0xC7;
+            colorBuffer[2] = 0x3F;
             serv.Draw(new DrawingDtoStruct(10, 120, 130, 240, colorBuffer));
 
-            colorBuffer = blueColor;
+            //blue
+            colorBuffer[0] = 0x00;
+            colorBuffer[1] = 0xAD;
+            colorBuffer[2] = 0xEF;
             serv.Draw(new DrawingDtoStruct(130, 240, 10, 120, colorBuffer));
 
-            colorBuffer = yellowColor;
+            //yellow
+            colorBuffer[0] = 0xFF;
+            colorBuffer[1] = 0xC2;
+            colorBuffer[2] = 0x0F;
             serv.Draw(new DrawingDtoStruct(130, 240, 130, 240, colorBuffer));
 
-            Save(serv.GetImageBuffer());
+            Save(serv.GetImageBuffer().ToArray());
         }
 
         public unsafe void Save(byte[] imageBuffer)
         {
             fixed (byte* ptr = imageBuffer)
             {
-                using (var bmp = new Bitmap(ImageSize, ImageSize, ImageSize * 4,
-                    PixelFormat.Format32bppRgb, new IntPtr(ptr)))
+                var format = PixelFormat.Format32bppRgb;
+                using (var bmp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, CalculateStride(format),
+                    format, new IntPtr(ptr)))
                 {
                     var guid = Guid.NewGuid().ToString("n").AsSpan();
                     var fileName = Combine(desktop, $"{guid.Slice(0, 5).ToString()}.png");
@@ -70,6 +85,14 @@ namespace DrawingAppStruct
                     bmp.Save(fileName);
                 }
             }
+        }
+
+        private int CalculateStride(PixelFormat format)
+        {
+            int bitsPerPixel = ((int)format & 0xff00) >> 8;
+            int bytesPerPixel = (bitsPerPixel + 7) / 8;
+
+            return 4 * ((IMAGE_WIDTH * bytesPerPixel + 3) / 4);
         }
 
     }

@@ -23,12 +23,20 @@ namespace DrawingAppClass
 
     public class DrawingClass
     {
-        private const int ImageSize = 250;
+        private const int IMAGE_WIDTH = 251;
+        private const int IMAGE_HEIGHT = 251;
+        private const int BYTES_PER_PIXEL = 4; // RGBA
 
-        private readonly DrawingServiceClass classService = new DrawingServiceClass(ImageSize);
+        private readonly int bufferSize = ((IMAGE_WIDTH * IMAGE_HEIGHT) * BYTES_PER_PIXEL) + (IMAGE_WIDTH * BYTES_PER_PIXEL) + BYTES_PER_PIXEL;
 
-        private static readonly string desktop =
-            GetFolderPath(SpecialFolder.Desktop);
+        private readonly string desktop = GetFolderPath(SpecialFolder.Desktop);
+
+        private readonly DrawingServiceClass classService;
+
+        public DrawingClass()
+        {
+            classService = new DrawingServiceClass(new byte[bufferSize], IMAGE_WIDTH, IMAGE_HEIGHT, BYTES_PER_PIXEL);
+        }
 
         public void DrawUsingClasses()
         {
@@ -79,15 +87,16 @@ namespace DrawingAppClass
             classService.Draw(blue);
             classService.Draw(yellow);
 
-            Save();
+            Save(classService.ImageBuffer);
         }
 
-        public unsafe void Save()
+        public unsafe void Save(byte[] imageBuffer)
         {
-            fixed (byte* ptr = classService.ImageBuffer)
+            fixed (byte* ptr = imageBuffer)
             {
-                using (var bmp = new Bitmap(ImageSize, ImageSize, ImageSize * 4,
-                    PixelFormat.Format32bppRgb, new IntPtr(ptr)))
+                var format = PixelFormat.Format32bppRgb;
+                using (var bmp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, CalculateStride(format),
+                    format, new IntPtr(ptr)))
                 {
                     var guid = Guid.NewGuid().ToString("n");
                     var fileName = Combine(desktop, $"{guid.Substring(0, 5)}.png");
@@ -95,6 +104,14 @@ namespace DrawingAppClass
                     bmp.Save(fileName);
                 }
             }
+        }
+
+        private int CalculateStride(PixelFormat format)
+        {
+            int bitsPerPixel = ((int)format & 0xff00) >> 8;
+            int bytesPerPixel = (bitsPerPixel + 7) / 8;
+
+            return 4 * ((IMAGE_WIDTH * bytesPerPixel + 3) / 4);
         }
 
     }

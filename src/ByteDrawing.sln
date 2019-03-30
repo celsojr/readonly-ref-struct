@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RunBenchmark", "RunBenchmar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DrawingAppStruct", "DrawingAppStruct\DrawingAppStruct.csproj", "{35B1B68E-639D-44AE-8DA2-0165D29F6396}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawingAppClass", "DrawingAppClass\DrawingAppClass.csproj", "{8594500A-4CDE-4C79-AEBA-3885906348AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DrawingAppClass", "DrawingAppClass\DrawingAppClass.csproj", "{8594500A-4CDE-4C79-AEBA-3885906348AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
